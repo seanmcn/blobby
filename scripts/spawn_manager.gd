@@ -131,10 +131,8 @@ func spawn_hunter(chunk_origin: Vector2, chunk_rng: RandomNumberGenerator, playe
 	)
 	hunter.global_position = pos
 
-	# Hunter size scales with time and player size
-	var min_size = 1.0 + time * 0.01
-	var max_size = min_size + player_size * 0.5
-	var hunter_size = chunk_rng.randf_range(min_size, max_size)
+	# Hunter size is always 2x-3x player size
+	var hunter_size = chunk_rng.randf_range(player_size * 2.0, player_size * 3.0)
 
 	hunter.initialize(hunter_size)
 	hunters_container.add_child(hunter)

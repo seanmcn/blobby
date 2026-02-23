@@ -1,7 +1,6 @@
 extends CharacterBody2D
 
 @export var base_speed: float = 80.0
-@export var detection_radius: float = 400.0
 @export var steering_strength: float = 2.0
 @export var base_radius: float = 25.0
 
@@ -11,14 +10,16 @@ var target: Node2D = null
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var sprite: Polygon2D = $Sprite2D
-@onready var detection_area: Area2D = $DetectionArea
 
 
 func _ready() -> void:
 	add_to_group("hunters")
-	detection_area.body_entered.connect(_on_detection_body_entered)
-	detection_area.body_exited.connect(_on_detection_body_exited)
 	update_visual()
+	# Find and always target the player
+	await get_tree().process_frame
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		target = players[0]
 
 
 func initialize(hunter_size: float) -> void:
@@ -37,12 +38,9 @@ func update_visual() -> void:
 
 func _physics_process(delta: float) -> void:
 	if target and is_instance_valid(target):
-		var distance = global_position.distance_to(target.global_position)
-		if distance < detection_radius:
-			var desired = (target.global_position - global_position).normalized() * get_speed()
-			velocity = velocity.lerp(desired, steering_strength * delta)
-		else:
-			velocity = velocity.lerp(Vector2.ZERO, delta)
+		# Always pursue the player
+		var desired = (target.global_position - global_position).normalized() * get_speed()
+		velocity = velocity.lerp(desired, steering_strength * delta)
 	else:
 		# Drift slowly when no target
 		velocity = velocity.lerp(Vector2.ZERO, delta * 0.5)
@@ -87,11 +85,3 @@ func take_damage(amount: float) -> void:
 		queue_free()
 
 
-func _on_detection_body_entered(body: Node2D) -> void:
-	if body.is_in_group("player"):
-		target = body
-
-
-func _on_detection_body_exited(body: Node2D) -> void:
-	if body == target:
-		target = null
