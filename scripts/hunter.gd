@@ -69,7 +69,7 @@ func check_player_collision() -> void:
 	var distance = global_position.distance_to(target.global_position)
 	var combined_radius = get_radius() + target.get_radius()
 
-	if distance < combined_radius * 0.8:
+	if distance < combined_radius * 1.1:
 		# Collision detected
 		if target.has_method("can_absorb") and target.can_absorb(size):
 			# Player absorbs hunter
