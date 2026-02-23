@@ -29,6 +29,11 @@ func _input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Check for keyboard input
+	var keyboard_input = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if keyboard_input != Vector2.ZERO:
+		target_velocity = keyboard_input * base_speed * get_speed_modifier()
+
 	# Smooth movement with inertia
 	velocity = velocity.lerp(target_velocity, smoothing * delta)
 	target_velocity = target_velocity.lerp(Vector2.ZERO, smoothing * delta)
