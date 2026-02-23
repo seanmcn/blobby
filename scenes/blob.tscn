@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://bblob0001"]
+
+[ext_resource type="Script" path="res://scripts/blob.gd" id="1_blob"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_blob"]
+radius = 15.0
+
+[node name="Blob" type="Area2D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_blob")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_blob")
+
+[node name="Sprite2D" type="Polygon2D" parent="."]
+color = Color(0.8, 0.9, 0.85, 1)
+polygon = PackedVector2Array(-15, 0, -14.7, 2.9, -13.9, 5.8, -12.5, 8.4, -10.6, 10.6, -8.4, 12.5, -5.8, 13.9, -2.9, 14.7, 0, 15, 2.9, 14.7, 5.8, 13.9, 8.4, 12.5, 10.6, 10.6, 12.5, 8.4, 13.9, 5.8, 14.7, 2.9, 15, 0, 14.7, -2.9, 13.9, -5.8, 12.5, -8.4, 10.6, -10.6, 8.4, -12.5, 5.8, -13.9, 2.9, -14.7, 0, -15, -2.9, -14.7, -5.8, -13.9, -8.4, -12.5, -10.6, -10.6, -12.5, -8.4, -13.9, -5.8, -14.7, -2.9)

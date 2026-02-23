@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3 uid="uid://bhunter01"]
+
+[ext_resource type="Script" path="res://scripts/hunter.gd" id="1_hunter"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hunter"]
+radius = 25.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
+radius = 400.0
+
+[node name="Hunter" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_hunter")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_hunter")
+
+[node name="Sprite2D" type="Polygon2D" parent="."]
+color = Color(1, 0.4, 0.4, 1)
+polygon = PackedVector2Array(-25, 0, -24.5, 4.9, -23.1, 9.6, -20.8, 14, -17.7, 17.7, -14, 20.8, -9.6, 23.1, -4.9, 24.5, 0, 25, 4.9, 24.5, 9.6, 23.1, 14, 20.8, 17.7, 17.7, 20.8, 14, 23.1, 9.6, 24.5, 4.9, 25, 0, 24.5, -4.9, 23.1, -9.6, 20.8, -14, 17.7, -17.7, 14, -20.8, 9.6, -23.1, 4.9, -24.5, 0, -25, -4.9, -24.5, -9.6, -23.1, -14, -20.8, -17.7, -17.7, -20.8, -14, -23.1, -9.6, -24.5, -4.9)
+
+[node name="DetectionArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_detection")
