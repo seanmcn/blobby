@@ -48,7 +48,7 @@ func update_chunks(player_pos: Vector2, player_size: float, time: float) -> void
 		for y in range(-spawn_radius, spawn_radius + 1):
 			var chunk = player_chunk + Vector2i(x, y)
 			if not active_chunks.has(chunk):
-				spawn_chunk(chunk, player_size, time)
+				spawn_chunk(chunk, player_size, time, player_pos)
 
 	# Despawn distant chunks
 	var chunks_to_remove: Array[Vector2i] = []
@@ -76,7 +76,15 @@ func chunk_distance(a: Vector2i, b: Vector2i) -> int:
 	return max(abs(a.x - b.x), abs(a.y - b.y))
 
 
-func spawn_chunk(chunk: Vector2i, player_size: float, time: float) -> void:
+func is_chunk_visible(chunk: Vector2i, player_pos: Vector2) -> bool:
+	var chunk_origin = chunk_to_world(chunk)
+	var chunk_rect = Rect2(chunk_origin, Vector2(CHUNK_SIZE, CHUNK_SIZE))
+	var screen_size = get_viewport().get_visible_rect().size
+	var screen_rect = Rect2(player_pos - screen_size / 2.0, screen_size)
+	return chunk_rect.intersects(screen_rect)
+
+
+func spawn_chunk(chunk: Vector2i, player_size: float, time: float, player_pos: Vector2 = Vector2.ZERO) -> void:
 	# Use chunk coordinates to create deterministic seed for this chunk
 	var chunk_seed = rng.seed + chunk.x * 73856093 + chunk.y * 19349663
 	var chunk_rng = RandomNumberGenerator.new()
@@ -92,14 +100,15 @@ func spawn_chunk(chunk: Vector2i, player_size: float, time: float) -> void:
 		if blob:
 			spawned_nodes.append(blob)
 
-	# Spawn hunters based on time and distance from origin
-	var hunter_chance = BASE_HUNTER_CHANCE + (time * 0.001) + (chunk.length() * 0.01)
-	hunter_chance = clamp(hunter_chance, 0.0, 0.5)
+	# Spawn hunters based on time and distance from origin (only in offscreen chunks)
+	if not is_chunk_visible(chunk, player_pos):
+		var hunter_chance = BASE_HUNTER_CHANCE + (time * 0.001) + (chunk.length() * 0.01)
+		hunter_chance = clamp(hunter_chance, 0.0, 0.5)
 
-	if chunk_rng.randf() < hunter_chance:
-		var hunter = spawn_hunter(chunk_origin, chunk_rng, player_size, time)
-		if hunter:
-			spawned_nodes.append(hunter)
+		if chunk_rng.randf() < hunter_chance:
+			var hunter = spawn_hunter(chunk_origin, chunk_rng, player_size, time)
+			if hunter:
+				spawned_nodes.append(hunter)
 
 	active_chunks[chunk] = spawned_nodes
 
