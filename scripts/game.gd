@@ -1,8 +1,12 @@
 extends Node2D
 
+const ZOOM_COMPENSATION: float = 0.25
+const ZOOM_SPEED: float = 2.0
+
 var time_survived: float = 0.0
 var distance_traveled: float = 0.0
 var is_game_active: bool = false
+var target_zoom: float = 1.0
 
 @onready var player: CharacterBody2D = $Player
 @onready var camera: Camera2D = $Camera2D
@@ -32,6 +36,8 @@ func _ready() -> void:
 
 	is_game_active = true
 	update_size_display()
+	update_camera_zoom(player.current_size)
+	camera.zoom = Vector2(target_zoom, target_zoom)
 
 
 func _process(delta: float) -> void:
@@ -47,6 +53,9 @@ func _process(delta: float) -> void:
 	# Update camera to follow player (Camera2D has position_smoothing_enabled)
 	camera.global_position = player.global_position
 
+	# Smoothly interpolate camera zoom toward target
+	camera.zoom = camera.zoom.lerp(Vector2(target_zoom, target_zoom), ZOOM_SPEED * delta)
+
 	# Update spawn manager
 	spawn_manager.update_chunks(player.global_position, player.current_size, time_survived)
 
@@ -61,6 +70,8 @@ func load_saved_state() -> void:
 	time_survived = state.time_survived
 	distance_traveled = state.distance_traveled
 	camera.global_position = player.global_position
+	update_camera_zoom(player.current_size)
+	camera.zoom = Vector2(target_zoom, target_zoom)
 
 
 func save_current_state() -> void:
@@ -77,8 +88,17 @@ func update_size_display() -> void:
 	size_label.text = "%.1f" % player.current_size
 
 
+func update_camera_zoom(size: float) -> void:
+	if size <= 5.0:
+		target_zoom = 1.0
+		return
+	target_zoom = 1.0 / pow(size / 5.0, ZOOM_COMPENSATION)
+	target_zoom = maxf(target_zoom, 0.1)
+
+
 func _on_player_size_changed(new_size: float) -> void:
 	update_size_display()
+	update_camera_zoom(new_size)
 
 
 func _on_player_died() -> void:
