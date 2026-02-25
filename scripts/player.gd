@@ -55,11 +55,13 @@ func _physics_process(delta: float) -> void:
 
 
 func get_speed_modifier() -> float:
-	# Slightly slower when larger
-	var size_penalty = 1.0 - (current_size * 0.005)
-	var base_modifier = clamp(size_penalty, 0.5, 1.2)
+	# Boost world-space speed to offset camera zoom making movement look sluggish
+	var zoom_compensation = 1.0
+	if current_size > 5.0:
+		zoom_compensation = pow(current_size / 5.0, 0.12)
+	var size_drag = 1.0 / (1.0 + current_size * 0.002)
+	var base_modifier = max(zoom_compensation * size_drag, 0.75)
 
-	# Apply ability bonus
 	if ability_manager:
 		base_modifier *= ability_manager.get_speed_multiplier()
 

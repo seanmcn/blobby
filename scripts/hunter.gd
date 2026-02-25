@@ -7,6 +7,7 @@ extends CharacterBody2D
 var size: float = 1.5
 var health: float = 1.0
 var target: Node2D = null
+var speed_ratio: float = 1.0
 
 # State machine
 enum State { WANDERING, PURSUING }
@@ -40,6 +41,9 @@ func _ready() -> void:
 
 	# Random approach angle offset for surround behavior (fixed for lifetime)
 	approach_angle_offset = randf_range(-PI, PI)
+
+	# Random speed ratio so hunters aren't perfectly uniform
+	speed_ratio = randf_range(0.95, 1.05)
 
 	# Find the player reference (but don't pursue yet)
 	await get_tree().process_frame
@@ -128,8 +132,10 @@ func _process_pursuing(delta: float) -> void:
 
 
 func get_speed() -> float:
-	# Slightly faster when larger, but not too much
-	return base_speed * (1.0 + size * 0.05)
+	if target and is_instance_valid(target):
+		var player_speed = target.base_speed * target.get_speed_modifier()
+		return player_speed * speed_ratio
+	return base_speed
 
 
 func get_radius() -> float:
