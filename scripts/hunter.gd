@@ -148,11 +148,28 @@ func check_player_collision() -> void:
 		if target.has_method("can_absorb") and target.can_absorb(size):
 			# Player absorbs hunter
 			target.absorb(size, 0)
-			queue_free()
+			play_absorb_animation(target)
 		else:
 			# Hunter kills player
 			if target.has_method("die"):
 				target.die()
+
+
+func play_absorb_animation(absorber: Node2D) -> void:
+	# Stop all hunter behavior
+	set_physics_process(false)
+	collision_layer = 0
+	collision_mask = 0
+
+	# Trigger membrane deformation on the player
+	if absorber.has_method("play_absorb_deformation"):
+		absorber.play_absorb_deformation(global_position)
+
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(self, "global_position", absorber.global_position, 0.2)
+	tween.tween_property(self, "scale", Vector2.ZERO, 0.15)
+	tween.tween_property(self, "modulate:a", 0.0, 0.15)
+	tween.chain().tween_callback(queue_free)
 
 
 func take_damage(amount: float) -> void:

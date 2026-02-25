@@ -12,6 +12,9 @@ var target_velocity: Vector2 = Vector2.ZERO
 var current_size: float = 1.0
 var last_position: Vector2 = Vector2.ZERO
 
+var _base_polygon: PackedVector2Array
+var _deformations: Array = []
+
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var sprite: Polygon2D = $Sprite2D
 @onready var ability_manager: AbilityManager = $AbilityManager
@@ -20,12 +23,18 @@ var last_position: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	add_to_group("player")
 	last_position = global_position
+	_base_polygon = sprite.polygon.duplicate()
 	update_visual_size()
 
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenDrag:
 		target_velocity = event.relative * drag_sensitivity * get_speed_modifier() * base_speed
+
+
+func _process(_delta: float) -> void:
+	if _deformations.size() > 0:
+		_update_polygon()
 
 
 func _physics_process(delta: float) -> void:
@@ -115,3 +124,50 @@ func get_color_int() -> int:
 	if ability_manager:
 		return ability_manager.get_color_int()
 	return 0
+
+
+func play_absorb_deformation(absorb_global_pos: Vector2) -> void:
+	var local_dir = (absorb_global_pos - global_position).normalized()
+	var contact_angle = local_dir.angle()
+
+	var deformation = {angle = contact_angle, strength = 0.0}
+	_deformations.append(deformation)
+
+	var tween = create_tween()
+	# Indent inward
+	tween.tween_method(func(val): deformation.strength = val, 0.0, 1.0, 0.08) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	# Spring back with overshoot (bulge outward)
+	tween.tween_method(func(val): deformation.strength = val, 1.0, -0.15, 0.1) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	# Settle to rest
+	tween.tween_method(func(val): deformation.strength = val, -0.15, 0.0, 0.08) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
+	# Cleanup
+	tween.tween_callback(func():
+		_deformations.erase(deformation)
+		if _deformations.size() == 0:
+			sprite.polygon = _base_polygon
+	)
+
+
+func _update_polygon() -> void:
+	var new_polygon = _base_polygon.duplicate()
+	var indent_depth = base_radius * 0.35
+	var indent_width = PI / 2.5
+
+	for i in range(new_polygon.size()):
+		var vertex = new_polygon[i]
+		var vertex_dir = Vector2(vertex.x, vertex.y)
+		var vertex_angle = vertex_dir.angle()
+		var offset = Vector2.ZERO
+
+		for def in _deformations:
+			var angle_diff = wrapf(vertex_angle - def.angle, -PI, PI)
+			if abs(angle_diff) < indent_width:
+				var factor = cos(angle_diff / indent_width * PI / 2.0)
+				offset -= vertex_dir.normalized() * indent_depth * def.strength * factor
+
+		new_polygon[i] = vertex + offset
+
+	sprite.polygon = new_polygon
