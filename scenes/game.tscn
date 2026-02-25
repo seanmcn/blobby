@@ -25,6 +25,8 @@ script = ExtResource("2_spawn")
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="SizeLabel" type="Label" parent="UI"]
+layout_mode = 1
+anchors_preset = 0
 offset_left = 20.0
 offset_top = 20.0
 offset_right = 150.0

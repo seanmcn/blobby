@@ -1,8 +1,9 @@
 extends Node
 
 const CHUNK_SIZE: int = 512
-const SPAWN_RADIUS: int = 3  # chunks around player
-const DESPAWN_RADIUS: int = 5
+
+var spawn_radius: int = 3
+var despawn_radius: int = 5
 
 const BLOBS_PER_CHUNK: int = 8
 const BASE_HUNTER_CHANCE: float = 0.1
@@ -27,14 +28,24 @@ func initialize(blobs_node: Node2D, hunters_node: Node2D, seed_value: int) -> vo
 	hunters_container = hunters_node
 	rng.seed = seed_value
 	active_chunks.clear()
+	update_spawn_radius()
+	get_viewport().size_changed.connect(update_spawn_radius)
+
+
+func update_spawn_radius() -> void:
+	var visible_size = get_viewport().get_visible_rect().size
+	var max_extent = max(visible_size.x, visible_size.y) / 2.0
+	var needed_chunks = int(ceil(max_extent / CHUNK_SIZE)) + 1
+	spawn_radius = max(3, needed_chunks)
+	despawn_radius = spawn_radius + 2
 
 
 func update_chunks(player_pos: Vector2, player_size: float, time: float) -> void:
 	var player_chunk = world_to_chunk(player_pos)
 
 	# Spawn new chunks in range
-	for x in range(-SPAWN_RADIUS, SPAWN_RADIUS + 1):
-		for y in range(-SPAWN_RADIUS, SPAWN_RADIUS + 1):
+	for x in range(-spawn_radius, spawn_radius + 1):
+		for y in range(-spawn_radius, spawn_radius + 1):
 			var chunk = player_chunk + Vector2i(x, y)
 			if not active_chunks.has(chunk):
 				spawn_chunk(chunk, player_size, time)
@@ -43,7 +54,7 @@ func update_chunks(player_pos: Vector2, player_size: float, time: float) -> void
 	var chunks_to_remove: Array[Vector2i] = []
 	for chunk in active_chunks.keys():
 		var chunk_vec = chunk as Vector2i
-		if chunk_distance(chunk_vec, player_chunk) > DESPAWN_RADIUS:
+		if chunk_distance(chunk_vec, player_chunk) > despawn_radius:
 			chunks_to_remove.append(chunk_vec)
 
 	for chunk in chunks_to_remove:

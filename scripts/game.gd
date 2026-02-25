@@ -44,8 +44,8 @@ func _process(delta: float) -> void:
 	# Track distance
 	distance_traveled += player.get_distance_traveled()
 
-	# Update camera to follow player
-	camera.global_position = camera.global_position.lerp(player.global_position, 5.0 * delta)
+	# Update camera to follow player (Camera2D has position_smoothing_enabled)
+	camera.global_position = player.global_position
 
 	# Update spawn manager
 	spawn_manager.update_chunks(player.global_position, player.current_size, time_survived)
